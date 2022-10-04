@@ -1,0 +1,56 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+}
+canvas {
+    border: 1px dotted pink;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+label {
+    padding: 10px;
+}
+
+img {
+    height: 300px;
+    object-fit: cover;
+    padding: 50px;
+}
+img:hover {
+    transform: scale(1.1);
+}
+
+.valid {
+    display: none;
+}
+
+.invalid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 30px;
+    color: red;
+}
+
+#body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hello-headers {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 50px;
+}
+
+.form-div {
+    display: flex;
+    padding: 30px;
+    margin-bottom: 250px;
+    justify-content: center;
+}
