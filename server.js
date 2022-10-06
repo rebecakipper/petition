@@ -199,12 +199,8 @@ app.get("/thank-you", (req, res) => {
 });
 
 app.get("/signatures", (req, res) => {
-    // if user has signed:
-    //     Get data from db
     if (req.session.signatureId) {
         db.getAllSigners().then((rows) => {
-            // console.log("Here are all the signers");
-            // console.log(rows);
             res.render("signatures", {
                 title: "all signers",
                 rows,
@@ -216,12 +212,8 @@ app.get("/signatures", (req, res) => {
 });
 
 app.get("/signatures/:city", (req, res) => {
-    // if user has signed:
-    //     Get data from db
-    let city;
-    db.getAllSigners().then((rows) => {
-        // console.log("Here are all the signers");
-        // console.log(rows);
+    let city = req.params.city;
+    db.getSignersByCity(city).then((rows) => {
         res.render("signatures-city", {
             title: "Signers in " + city,
             rows,
