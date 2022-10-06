@@ -24,13 +24,42 @@ app.engine("handlebars", engine());
 app.set("view engine", "handlebars");
 
 //////////////////////////////////////////ROUTES////////////////////////////////////////////////////////////
-
 app.get("/", (req, res) => {
+    //if user not loged in(cookie)
+    //       redirect to /register
+    //else
+    res.redirect("/petition");
+});
+
+app.get("/resgister", (req, res) => {
+    //if user not loged in(cookie)
+    //      render /register
+    //
+    //else
+    res.redirect("/petition");
+});
+
+app.post("/register", (req, res) => {
+    //if all fields are complete
+    //      keep going
+    //else
+    //      send error message(must fill everything) aka formStatus = "invalid"
+    //if user already exists
+    //      send error message (try again)
+    // else
+    //      hash password(with bcryptjs package)
+    ///     send user_data to db(insertUser())
+    //      give cookie
+    //      res.redirect("/petition")
+    //
+});
+
+app.get("/petition", (req, res) => {
     // if user has NOT signed:
     //    render the petition page with the form
 
     if (!req.session.signatureId) {
-        res.render("welcome", {
+        res.render("petition", {
             title: "Welcome",
             error_status: formStatus,
         });
@@ -39,7 +68,25 @@ app.get("/", (req, res) => {
     }
 });
 
-app.post("/", (req, res) => {
+app.post("/petition", (req, res) => {
+    // if user signed
+    //      formStatus = "valid"
+    //    get uId from cookie.session
+    //    use id to create matching user_signature
+    //
+    // db.createSignature(1st param= uId from cookie.session, 2nd param= signature itself req.body.user_signature)
+    //      give cookie that user has signed & redirect to thank you
+    //.then((id) => {
+    // if (!id) {
+    //     console.error("Error in insert:", err);
+    //     res.end("somethiung went wrong in insert");
+    // } else {
+    //     req.session.signatureId = id;
+    //     res.redirect("/thank-you");
+    // }
+    //
+    //
+
     if (req.body.first_name && req.body.last_name && req.body.user_signature) {
         formStatus = "valid";
         db.createSigner(
@@ -78,8 +125,6 @@ app.get("/thank-you", (req, res) => {
         );
         return;
     } else {
-        // else:
-        //     REDIRECT to home/petition page
         res.redirect("/");
     }
 });
@@ -104,3 +149,16 @@ app.get("/signatures", (req, res) => {
 app.listen(PORT, () =>
     console.log(`Express project running listeneing on port:${PORT}`)
 );
+
+/* register flow
+1.GET/ render registration page with form
+2.POST/ hash and send data to db, set session cookie
+3.redirect to GET/ petiton page...
+
+
+login flow
+1. GET/ render login page
+2. POST/ check credential and redirect to GET/ petition page
+
+
+*/
