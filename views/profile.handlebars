@@ -1,13 +1,13 @@
 <div class="content-div">
     <div class="hello-headers">
-        <h1>hello there, welcome to my petition!</h1>
+        <h1>Thank you for registering!</h1>
         <img
             class="cover"
             src="/public/F3E3EA864B4B80AE95FB53408BC30D1F.jpeg"
             alt=""
         />
     </div>
-    <h2>Please log in to sign.</h2>
+    <h2>Please tell us a little bit more about yourself:</h2>
     <div class="{{error_status}}">
             <p>Sorry, we coudnt process your signature.</p>
             <br />
@@ -16,12 +16,15 @@
     </div>
     <div class"div_form">
         <form method="post"><H1>Log In:</H1>
-            <label for="user_email">
-                Email:
-                <input type="text" name="user_email" id="user_email" />
+            <label for="user_age">
+                Your Age:
+                <input type="text" name="user_age" id="user_age" />
             </label>
-            <label for="user_password">Password:
-                <input type="password" name="user_password" id="user_password" />
+            <label for="user_city">Your city:
+                <input type="text" name="user_city" id="user_city" />
+            </label>
+            <label for="user_homepage">Your homepage:
+                <input type="url" name="user_homepage" id="user_homepage" />
             </label>
             <button type="submit" id="login_btn">Log in</button>
         </form>

@@ -1,13 +1,12 @@
 <div id="body">
     <div class="hello-headers">
-        <h1>these are all the signers so far:</h1>
+        <h1>these are all the signers in {{user_city}} so far:</h1>
         {{#rows}}
             <div class="signer">
                 <h3><a href="{{user_homepage}}">{{first_name}}
                         {{last_name}}</a>{{first_name}}
                     {{last_name}}
                     {{user_age}}
-                    <a href="/signeratures/{{user_city}}</}}">{{user_city}}</a>
                 </h3>
             </div>
         {{/rows}}

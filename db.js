@@ -9,7 +9,7 @@ const DATABASE_URL = process.env.DATABASE_URL;
 const db = spicedPg(DATABASE_URL);
 
 module.exports.getAllSigners = function () {
-    const sql = "SELECT * FROM signers;";
+    const sql = "SELECT * FROM signatures;";
     // NB! remember to RETURN the promise!
     return db
         .query(sql)
@@ -21,21 +21,26 @@ module.exports.getAllSigners = function () {
         });
 };
 
-module.exports.createSigner = function (first_name, last_name, user_signature) {
+module.exports.createUser = function (
+    first_name,
+    last_name,
+    user_email,
+    user_password
+) {
     const sql = `
-        INSERT INTO signers (first_name, last_name, user_signature)
-        VALUES ($1, $2, $3)
+        INSERT INTO users (first_name, last_name, user_email, user_password)
+        VALUES ($1, $2, $3, $4)
         RETURNING id;
     `;
     // Here we are using SAFE interpolation to protect against SQL injection attacks
     return db
-        .query(sql, [first_name, last_name, user_signature])
+        .query(sql, [first_name, last_name, user_email, user_password])
         .then((result) => result.rows)
         .catch((error) => console.log("error inserting signer", error));
 };
 
 module.exports.countSigners = function () {
-    const sql = `SELECT COUNT(*) FROM signers;`;
+    const sql = `SELECT COUNT(*) FROM signatures;`;
     // Here we are using SAFE interpolation to protect against SQL injection attacks
     return db
         .query(sql)
@@ -43,7 +48,7 @@ module.exports.countSigners = function () {
 };
 
 module.exports.getSignature = function (userID) {
-    const sql = `SELECT user_signature FROM signers WHERE id=$1;`;
+    const sql = `SELECT user_signature FROM signatures WHERE id=$1;`;
     // Here we are using SAFE interpolation to protect against SQL injection attacks
     return db
         .query(sql, [userID])
@@ -51,5 +56,48 @@ module.exports.getSignature = function (userID) {
             console.log("error retrieving signature from signers", error)
         );
 };
-// Example of an SQL injection attack!
-// createCity("Berlin'; DROP TABLE users;")
+
+module.exports.createProfile = function (
+    user_id,
+    user_age,
+    user_city,
+    user_homepage
+) {
+    const sql = `
+        INSERT INTO profiles (user_id, user_age, user_city, user_homepage)
+        VALUES ($1, $2, $3, $4);
+    `;
+    // Here we are using SAFE interpolation to protect against SQL injection attacks
+    return db
+        .query(sql, [user_id, user_age, user_city, user_homepage])
+        .then((result) => result.rows)
+        .catch((error) => console.log("error creating profile", error));
+};
+
+module.exports.createSignature = function (user_id, user_signature) {
+    const sql = `
+        INSERT INTO signatures (user_id, user_signature)
+        VALUES ($1, $2);
+    `;
+    // Here we are using SAFE interpolation to protect against SQL injection attacks
+    return db
+        .query(sql, [user_id, user_signature])
+        .then((result) => result.rows)
+        .catch((error) => console.log("error creating profile", error));
+};
+
+module.exports.getUserByEmail = function (user_email) {
+    const sql = `SELECT * FROM users WHERE user_email=$1 RETURNING user_password, id;`;
+    // Here we are using SAFE interpolation to protect against SQL injection attacks
+    return db
+        .query(sql, [user_email])
+        .catch((error) => console.log("error retrieving user by email", error));
+};
+
+module.exports.getUserByCity = function (user_email) {
+    const sql = `SELECT * FROM users WHERE user_email=$1 RETURNING user_password, id;`;
+    // Here we are using SAFE interpolation to protect against SQL injection attacks
+    return db
+        .query(sql, [user_email])
+        .catch((error) => console.log("error retrieving user by email", error));
+};
