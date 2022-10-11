@@ -6,33 +6,38 @@
             src="/public/F3E3EA864B4B80AE95FB53408BC30D1F.jpeg"
             alt=""
         />
+        <h2>Please register bellow to sign the petition and help the fighting
+            this urgent matter!</h2>
     </div>
-    <h2>Please register bellow to sign the petition and help the fighting this urgent matter!</h2> 
-    <div class="{{error_status}}">
-            <p>Sorry, we coudnt process your signature.</p>
-            <br />
-            <p>Please fill in all of the input fields bellow as well as the signature!</p></div>
+    <div class="error">
+        {{error_status}}
     </div>
-    <div class"div_form">
+    <div class="div_form">
         <form method="post"><H1>Registration:</H1>
             <label for="first_name">
                 First name:
-                <input type="text" name="first_name" id="first_name" />
+                <input type="text" name="first_name" id="first_name" required />
             </label>
             <label for="last_name">
                 Last name:
-                <input type="text" name="last_name" id="last_name" />
+                <input type="text" name="last_name" id="last_name" required />
             </label>
             <label for="user_email">
                 Email:
-                <input type="text" name="user_email" id="user_email" />
+                <input type="text" name="user_email" id="user_email" required />
             </label>
             <label for="user_password">Password:
-                <input type="password" name="user_password" id="user_password" />
+                <input
+                    type="password"
+                    name="user_password"
+                    id="user_password"
+                    required
+                />
             </label>
             <button type="submit" id="login_btn">Sign up</button>
-   
-             <p>if you are already a member, please <a href="/login">log in</a>.</p>
+
+            <p>if you are already a member, please
+                <a href="/login">log in</a>.</p>
         </form>
     </div>
 

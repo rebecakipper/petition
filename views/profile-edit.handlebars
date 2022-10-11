@@ -1,0 +1,79 @@
+<div class="content-div">
+    <div class="hello-headers">
+        <h1>Hi {{first_name}}!</h1>
+        <br />
+        <h2>edit you profile bellow:</h2>
+    </div>
+    <div class="error">
+        {{error_status}}
+    </div>
+    <div class="div_form">
+        <form method="post">
+            <label for="first_name">
+                First name:
+                <input
+                    type="text"
+                    value="{{first_name}}"
+                    name="first_name"
+                    id="first_name"
+                    required
+                />
+            </label>
+            <label for="last_name">
+                Last name:
+                <input
+                    type="text"
+                    value="{{last_name}}"
+                    name="last_name"
+                    id="last_name"
+                    required
+                />
+            </label>
+            <label for="user_email">
+                Email:
+                <input
+                    type="text"
+                    value="{{user_email}}"
+                    name="user_email"
+                    id="user_email"
+                    required
+                />
+            </label>
+            <label for="user_password">Password:
+                <input
+                    type="password"
+                    name="user_password"
+                    id="user_password"
+                />
+            </label>
+
+            <label for="user_age">
+                Your Age:
+                <input
+                    type="text"
+                    value="{{user_age}}"
+                    name="user_age"
+                    id="user_age"
+                />
+            </label>
+            <label for="user_city">Your city:
+                <input
+                    type="text"
+                    value="{{user_city}}"
+                    name="user_city"
+                    id="user_city"
+                />
+            </label>
+            <label for="user_homepage">Your homepage:
+                <input
+                    type="url"
+                    value="{{user_homepage}}"
+                    name="user_homepage"
+                    id="user_homepage"
+                />
+            </label>
+            <button type="submit" id="submit_btn">update</button>
+        </form>
+    </div>
+
+</div>

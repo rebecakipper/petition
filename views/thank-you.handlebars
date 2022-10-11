@@ -1,5 +1,5 @@
 <div class="content-div">
-    <div>
+    <div class="hello-headers">
         <img
             class="cover"
             src="/public/F3E3EA864B4B80AE95FB53408BC30D1F.jpeg"
@@ -7,7 +7,19 @@
         />
         <h3>thank you for your signature!</h3>
     </div>
-    <img src="{{user_signature}}" alt="signature image" />
-    <a href="{{signatures_page}}"> see all {{number_of_signers}} signers</a>
+    <div class="form-div">
+        <img class="signature" src="{{user_signature}}" alt="signature image" />
+        <a href="{{signatures_page}}"> see all {{number_of_signers}} signers</a>
 
+        <a href="{{edit_profile}}">
+            <button>
+                Edit Profile
+            </button>
+        </a>
+        <a href="{{edit_signature}}">
+            <button>
+                Change Signature
+            </button>
+        </a>
+    </div>
 </div>

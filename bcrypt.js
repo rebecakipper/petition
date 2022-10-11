@@ -6,12 +6,8 @@ module.exports.hash = (password) => {
     });
 };
 
-module.exports.authenticate = (
-    password_input,
-    user_hashed_password,
-    user_id
-) => {
+module.exports.authenticate = (password_input, user_hashed_password) => {
     return bcrypt
         .compare(password_input, user_hashed_password)
-        .then((result, id) => console.log("is password correct?: ", result));
+        .then((result) => result);
 };

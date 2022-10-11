@@ -10,16 +10,17 @@ form {
     display: flex;
     flex-direction: column;
 }
+
 label {
     padding: 10px;
 }
 
-img {
+img.cover {
     height: 300px;
     object-fit: cover;
     padding: 50px;
 }
-img:hover {
+img.cover:hover {
     transform: scale(1.1);
 }
 
@@ -50,7 +51,29 @@ img:hover {
 
 .form-div {
     display: flex;
+    flex-direction: column;
     padding: 30px;
     margin-bottom: 250px;
     justify-content: center;
+    align-items: center;
+}
+
+.div_form {
+    display: flex;
+    flex-direction: column;
+    padding: 30px;
+    margin-bottom: 250px;
+    justify-content: center;
+    align-items: center;
+}
+
+.error {
+    color: red;
+}
+
+.signature {
+    width: 300px;
+    object-fit: cover;
+    border-bottom: 2px dotted black;
+    margin-bottom: 50px;
 }

@@ -36,7 +36,7 @@ module.exports.createUser = function (
     // Here we are using SAFE interpolation to protect against SQL injection attacks
     return db
         .query(sql, [first_name, last_name, user_email, user_password])
-        .then((result) => result.rows)
+        .then((result) => result.rows[0].id)
         .catch((error) => console.log("error inserting signer", error));
 };
 
@@ -48,7 +48,7 @@ module.exports.countSigners = function () {
 };
 
 module.exports.getSignature = function (userID) {
-    const sql = `SELECT user_signature FROM signatures WHERE id=$1;`;
+    const sql = `SELECT user_signature FROM signatures WHERE user_id=$1;`;
     // Here we are using SAFE interpolation to protect against SQL injection attacks
     return db
         .query(sql, [userID])
@@ -87,16 +87,22 @@ module.exports.createSignature = function (user_id, user_signature) {
 };
 
 module.exports.getUserByEmail = function (user_email) {
-    const sql = `SELECT * FROM users WHERE user_email=$1 RETURNING user_password, id;`;
+    const sql = `SELECT * FROM users WHERE user_email=$1;`;
     // Here we are using SAFE interpolation to protect against SQL injection attacks
     return db
         .query(sql, [user_email])
+        .then((result) => [result.rows[0].user_password, result.rows[0].id])
         .catch((error) => console.log("error retrieving user by email", error));
 };
 
 module.exports.getSignersByCity = function (city) {
-    const sql =
-        "SELECT user_homepage, first_name, last_name, user_age FROM signatures JOIN profiles ON signatures.user_id = profiles.user_id JOIN users ON users.id = profiles.user_id WHERE user_city=$1;";
+    const sql = `SELECT user_homepage, first_name, last_name, user_age 
+    FROM signatures 
+    JOIN profiles 
+    ON signatures.user_id = profiles.user_id 
+    JOIN users 
+    ON users.id = profiles.user_id 
+    WHERE user_city=$1;`;
     // NB! remember to RETURN the promise!
     return db
         .query(sql, [city])
@@ -106,4 +112,52 @@ module.exports.getSignersByCity = function (city) {
         .catch((error) => {
             console.log("error selecting signers by city", error);
         });
+};
+
+module.exports.getUserData = function (user_id) {
+    const sql = `SELECT first_name, last_name, user_email, user_age, user_city, user_homepage
+    FROM users 
+    LEFT JOIN profiles
+    ON profiles.user_id = users.id 
+    WHERE users.id=$1;`;
+    // Here we are using SAFE interpolation to protect against SQL injection attacks
+    return db
+        .query(sql, [user_id])
+        .then((result) => result)
+        .catch((error) =>
+            console.log("error retrieving user data by id", error)
+        );
+};
+
+module.exports.upsertUserProfile = function (
+    user_id,
+    user_age,
+    user_city,
+    user_homepage
+) {
+    const sql = `INSERT INTO profiles (user_id, user_age, user_city, user_homepage)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (user_id)
+     DO UPDATE SET user_age=$2, user_city=$3, user_homepage = $4;`;
+    // // Here we are using SAFE interpolation to protect against SQL injection attacks
+    return db
+        .query(sql, [user_id, user_age, user_city, user_homepage])
+        .catch((error) => console.log("error upserting user profile", error));
+};
+
+module.exports.updateUserData = function (
+    user_id,
+    first_name,
+    last_name,
+    user_email
+) {
+    const sql = `UPDATE users 
+     SET first_name=$2,
+     last_name=$3,
+     user_email=$4
+     WHERE id=$1;`;
+    // // Here we are using SAFE interpolation to protect against SQL injection attacks
+    return db
+        .query(sql, [user_id, first_name, last_name, user_email])
+        .catch((error) => console.log("error updating user data", error));
 };

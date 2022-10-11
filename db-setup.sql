@@ -15,7 +15,7 @@ CREATE TABLE users(
 CREATE TABLE signatures(
     id SERIAL PRIMARY KEY,
     user_signature text NOT NULL,
-    user_id INT NOT NULL REFERENCES users(id),
+    user_id INT NOT NULL REFERENCES users(id) UNIQUE,
     time_stamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -24,6 +24,6 @@ CREATE TABLE profiles(
     user_age INT,
     user_city VARCHAR(255),
     user_homepage VARCHAR(255),
-    user_id INT NOT NULL REFERENCES users(id),
+    user_id INT NOT NULL REFERENCES users(id) UNIQUE,
     time_stamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

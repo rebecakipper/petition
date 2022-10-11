@@ -8,7 +8,14 @@ const app = express();
 const path = require("path");
 const { engine } = require("express-handlebars");
 const cookieSession = require("cookie-session");
-let formStatus = "valid";
+//let formStatus = "valid";
+const {
+    logger,
+    ensureSignedIn,
+    ensureSignedOut,
+    ensurePetitionSigned,
+    ensurePetitionNotSigned,
+} = require("./middleware");
 
 //////////////////////////////////////////MIDDLEWARES////////////////////////////////////////////////////////////
 
@@ -24,7 +31,9 @@ app.use(
 app.engine("handlebars", engine());
 app.set("view engine", "handlebars");
 
+app.use(logger);
 //////////////////////////////////////////ROUTES////////////////////////////////////////////////////////////
+
 app.get("/", (req, res) => {
     //if user not loged in(cookie)
     //       redirect to /register
@@ -34,19 +43,18 @@ app.get("/", (req, res) => {
     //res.redirect("/petition");
 });
 
-app.get("/register", (req, res) => {
+app.get("/register", ensureSignedOut, (req, res) => {
     //if user not loged in(cookie)
     //      render /register
     res.render("register", {
         title: "Register",
-        error_status: formStatus,
     });
     //
     //else
     //res.redirect("/petition");
 });
 
-app.post("/register", (req, res) => {
+app.post("/register", ensureSignedOut, (req, res) => {
     //if all fields are complete
     //      keep going
     //else
@@ -70,160 +78,129 @@ app.post("/register", (req, res) => {
                 console.error("Error in insert:", err);
                 res.end("somethiung went wrong while creating user");
             } else {
+                console.log(id);
                 req.session.userId = id;
+                //db.createProfile(id);
                 res.redirect("/profile");
             }
         });
     });
 });
 
-app.get("/login", (req, res) => {
+app.get("/login", ensureSignedOut, (req, res) => {
     //if user not loged in(cookie)
     //      render /register
     res.render("login", {
         title: "Login",
-        error_status: formStatus,
     });
     //
     //else
     //res.redirect("/petition");
 });
 
-app.post("/login", (req, res) => {
-    db.getUserByEmail(req.body.user_email).then((hashed_password, id) => {
-        console.log({
-            hashed_password,
-            id,
-        });
+app.post("/login", ensureSignedOut, (req, res) => {
+    db.getUserByEmail(req.body.user_email).then(([hashed_password, id]) => {
+        const uId = id;
         bcrypt
             .authenticate(req.body.user_password, hashed_password)
-            .then((result, id) => {
-                if (result === "true") {
-                    req.session.userId = id;
+            .then((result) => {
+                if (result === true) {
+                    req.session.userId = uId;
                     res.redirect("/profile");
+                } else {
+                    res.render("login", {
+                        title: "Login",
+                        error_status:
+                            "please try again, something is not correct",
+                    });
                 }
-                formStatus = "invalid";
-                res.render("login", {
-                    title: "Login",
-                    error_status: formStatus,
-                });
             });
     });
 });
 
-app.get("/profile", (req, res) => {
+app.get("/profile", ensureSignedIn, (req, res) => {
     //if user not loged in(cookie)
     //      render /register
     res.render("profile", {
         title: "Profile",
-        error_status: formStatus,
     });
+
     //
     //else
     //res.redirect("/petition");
 });
 
-app.post("/profile", (req, res) => {
-    console.log(req.session.userId[0].id);
+app.post("/profile", ensureSignedIn, (req, res) => {
+    console.log(req.session.userId);
+
     db.createProfile(
-        req.session.userId[0].id,
+        req.session.userId,
         req.body.user_age,
         req.body.user_city,
         req.body.user_homepage
     ).then(() => res.redirect("/petition"));
 });
 
-app.get("/petition", (req, res) => {
-    // if user has NOT signed:
-    //    render the petition page with the form
+app.get("/petition", ensureSignedIn, ensurePetitionNotSigned, (req, res) => {
     res.render("petition", {
         title: "Welcome",
-        error_status: formStatus,
     });
-    // if (!req.session.signatureId) {
-    //     res.render("petition", {
-    //         title: "Welcome",
-    //         error_status: formStatus,
-    //     });
-    // } else {
-    //     res.redirect("/thank-you");
-    // }
 });
 
-app.post("/petition", (req, res) => {
-    // if user signed
-    //      formStatus = "valid"
-    //    get uId from cookie.session
-    //    use id to create matching user_signature
-    //
-    // db.createSignature(1st param= uId from cookie.session, 2nd param= signature itself req.body.user_signature)
-    //      give cookie that user has signed & redirect to thank you
-    //.then((id) => {
-    // if (!id) {
-    //     console.error("Error in insert:", err);
-    //     res.end("somethiung went wrong in insert");
-    // } else {
-    //     req.session.signatureId = id;
-    //     res.redirect("/thank-you");
-    // }
-    //
+app.post("/petition", ensureSignedIn, ensurePetitionNotSigned, (req, res) => {
+    db.createSignature(req.session.userId, req.body.user_signature).then(() => {
+        //give cookie that user has signed & redirect to thank you
+        req.session.signed = true;
+        res.redirect("/thank-you");
+    });
+});
 
-    db.createSignature(req.session.userId[0].id, req.body.user_signature).then(
-        () => {
-            //give cookie that user has signed & redirect to thank you
-            req.session.signed = "true";
-            res.redirect("/thank-you");
+app.get("/thank-you", ensureSignedIn, ensurePetitionSigned, (req, res) => {
+    console.log("thank you : ", req.session.userId);
+    Promise.all([db.countSigners(), db.getSignature(req.session.userId)]).then(
+        ([count, userSignature]) => {
+            console.log(count, userSignature);
+
+            const number_of_signers = count.rows[0].count;
+            const user_signature = userSignature.rows[0].user_signature;
+            res.render("thank-you", {
+                title: "thank you for signing",
+                user_signature,
+                signatures_page: "/signatures",
+                number_of_signers,
+                edit_profile: "/profile/edit",
+                edit_signature: "/profile/signature/edit",
+            });
         }
     );
 });
 
-app.get("/thank-you", (req, res) => {
-    if (req.session.signed) {
-        const sigId = req.session.signatureId[0].id;
-        Promise.all([db.countSigners(), db.getSignature(sigId)]).then(
-            (results) => {
-                const number_of_signers = results[0].rows[0].count;
-                const user_signature = results[1].rows[0].user_signature;
-                res.render("thank-you", {
-                    title: "thank you for signing",
-                    user_signature,
-                    signatures_page: "/signatures",
-                    number_of_signers,
-                });
-            }
-        );
-        return;
-    } else {
-        res.redirect("/");
-    }
-});
-
-app.get("/signatures", (req, res) => {
-    if (req.session.signatureId) {
-        db.getAllSigners().then((rows) => {
-            res.render("signatures", {
-                title: "all signers",
-                rows,
-            });
-        });
-    } else {
-        res.redirect("/");
-    }
-});
-
-app.get("/signatures/:city", (req, res) => {
-    let city = req.params.city;
-    db.getSignersByCity(city).then((rows) => {
-        res.render("signatures-city", {
-            title: "Signers in " + city,
+app.get("/signatures", ensureSignedIn, ensurePetitionSigned, (req, res) => {
+    db.getAllSigners().then((rows) => {
+        res.render("signatures", {
+            title: "all signers",
             rows,
         });
     });
 });
 
-app.get("logout", (req, res) => {
-    //if user not loged in(cookie)
-    //       redirect to /register
+app.get(
+    "/signatures/:city",
+    ensureSignedIn,
+    ensurePetitionSigned,
+    (req, res) => {
+        let city = req.params.city;
+        db.getSignersByCity(city).then((rows) => {
+            res.render("signatures-city", {
+                title: "Signers in " + city,
+                user_city: city,
+                rows,
+            });
+        });
+    }
+);
+
+app.get("/logout", ensureSignedIn, (req, res) => {
     req.session = null;
     res.redirect("/register");
     //
@@ -231,19 +208,65 @@ app.get("logout", (req, res) => {
     //res.redirect("/petition");
 });
 
+app.get("/profile/edit", ensureSignedIn, (req, res) => {
+    console.log(req.session.userId);
+    db.getUserData(req.session.userId).then(({ rows: [row] }) => {
+        const {
+            first_name,
+            last_name,
+            user_email,
+            user_age,
+            user_city,
+            user_homepage,
+        } = row || {};
+
+        return res.render("profile-edit", {
+            title: "Edit profile",
+            first_name,
+            last_name,
+            user_email,
+            user_age,
+            user_city,
+            user_homepage,
+        });
+    });
+});
+
+app.post("/profile/edit", ensureSignedIn, (req, res) => {
+    db.updateUserData(
+        req.session.userId,
+        req.body.first_name,
+        req.body.last_name,
+        req.body.user_email
+    ).then(() => {
+        db.upsertUserProfile(
+            req.session.userId,
+            req.body.user_age,
+            req.body.user_city,
+            req.body.user_homepage
+        );
+        return res.redirect("/profile/edit");
+    });
+});
+
+app.get(
+    "/profile/edit/signature",
+    ensureSignedIn,
+    ensurePetitionSigned,
+    (req, res) => {
+        db.getSignature(req.session.userId).then((result) => {
+            const user_signature = result.rows[0].user_signature;
+            res.render("delete-signature", {
+                title: "Edit signature",
+                // user_name,
+                user_signature,
+                // error_status,
+                // edit_signature,
+            });
+        });
+    }
+);
+
 app.listen(PORT, () =>
     console.log(`Express project running listeneing on port:${PORT}`)
 );
-
-/* register flow
-1.GET/ render registration page with form
-2.POST/ hash and send data to db, set session cookie
-3.redirect to GET/ petiton page...
-
-
-login flow
-1. GET/ render login page
-2. POST/ check credential and redirect to GET/ petition page
-
-
-*/
