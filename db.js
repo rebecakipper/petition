@@ -11,7 +11,6 @@ const db = spicedPg(DATABASE_URL);
 module.exports.getAllSigners = function () {
     const sql =
         "SELECT user_homepage, first_name, last_name, user_age, user_city FROM signatures JOIN profiles ON signatures.user_id = profiles.user_id JOIN users ON users.id = profiles.user_id;";
-    // NB! remember to RETURN the promise!
     return db
         .query(sql)
         .then((result) => {
@@ -33,7 +32,6 @@ module.exports.createUser = function (
         VALUES ($1, $2, $3, $4)
         RETURNING id;
     `;
-    // Here we are using SAFE interpolation to protect against SQL injection attacks
     return db
         .query(sql, [first_name, last_name, user_email, user_password])
         .then((result) => result.rows[0].id)
@@ -49,7 +47,6 @@ module.exports.countSigners = function () {
 
 module.exports.getSignature = function (userID) {
     const sql = `SELECT user_signature FROM signatures WHERE user_id=$1;`;
-    // Here we are using SAFE interpolation to protect against SQL injection attacks
     return db
         .query(sql, [userID])
         .catch((error) =>
@@ -88,7 +85,6 @@ module.exports.createSignature = function (user_id, user_signature) {
 
 module.exports.getUserByEmail = function (user_email) {
     const sql = `SELECT * FROM users WHERE user_email=$1;`;
-    // Here we are using SAFE interpolation to protect against SQL injection attacks
     return db
         .query(sql, [user_email])
         .then((result) => [result.rows[0].user_password, result.rows[0].id])
@@ -120,7 +116,6 @@ module.exports.getUserData = function (user_id) {
     LEFT JOIN profiles
     ON profiles.user_id = users.id 
     WHERE users.id=$1;`;
-    // Here we are using SAFE interpolation to protect against SQL injection attacks
     return db
         .query(sql, [user_id])
         .then((result) => result)
@@ -139,13 +134,13 @@ module.exports.upsertUserProfile = function (
      VALUES ($1, $2, $3, $4)
      ON CONFLICT (user_id)
      DO UPDATE SET user_age=$2, user_city=$3, user_homepage = $4;`;
-    // // Here we are using SAFE interpolation to protect against SQL injection attacks
+
     return db
         .query(sql, [user_id, user_age, user_city, user_homepage])
         .catch((error) => console.log("error upserting user profile", error));
 };
 
-module.exports.updateUserData = function (
+module.exports.updateUserDataWithoutPassword = function (
     user_id,
     first_name,
     last_name,
@@ -156,8 +151,33 @@ module.exports.updateUserData = function (
      last_name=$3,
      user_email=$4
      WHERE id=$1;`;
-    // // Here we are using SAFE interpolation to protect against SQL injection attacks
     return db
         .query(sql, [user_id, first_name, last_name, user_email])
         .catch((error) => console.log("error updating user data", error));
+};
+
+module.exports.updateUserDataWithPassword = function (
+    user_id,
+    first_name,
+    last_name,
+    user_email,
+    user_password
+) {
+    const sql = `UPDATE users 
+     SET first_name=$2,
+     last_name=$3,
+     user_email=$4,
+     user_password=$5
+     WHERE id=$1;`;
+    return db
+        .query(sql, [user_id, first_name, last_name, user_email, user_password])
+        .catch((error) => console.log("error updating user data", error));
+};
+
+module.exports.deleteUserSignature = function (user_id) {
+    const sql = `DELETE FROM signatures 
+     WHERE user_id=$1;`;
+    return db
+        .query(sql, [user_id])
+        .catch((error) => console.log("error deleting user signature", error));
 };

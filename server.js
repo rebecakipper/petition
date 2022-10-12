@@ -8,7 +8,6 @@ const app = express();
 const path = require("path");
 const { engine } = require("express-handlebars");
 const cookieSession = require("cookie-session");
-//let formStatus = "valid";
 const {
     logger,
     ensureSignedIn,
@@ -55,18 +54,6 @@ app.get("/register", ensureSignedOut, (req, res) => {
 });
 
 app.post("/register", ensureSignedOut, (req, res) => {
-    //if all fields are complete
-    //      keep going
-    //else
-    //      send error message(must fill everything) aka formStatus = "invalid"
-    //if user already exists
-    //      send error message (try again)
-    // else
-    //      hash password(with bcryptjs package)
-    ///     send user_data to db(insertUser())
-    //      give cookie
-    //      res.redirect("/petition")
-    //
     bcrypt.hash(req.body.user_password).then((hashed_password) => {
         db.createUser(
             req.body.first_name,
@@ -78,9 +65,7 @@ app.post("/register", ensureSignedOut, (req, res) => {
                 console.error("Error in insert:", err);
                 res.end("somethiung went wrong while creating user");
             } else {
-                console.log(id);
                 req.session.userId = id;
-                //db.createProfile(id);
                 res.redirect("/profile");
             }
         });
@@ -131,8 +116,6 @@ app.get("/profile", ensureSignedIn, (req, res) => {
 });
 
 app.post("/profile", ensureSignedIn, (req, res) => {
-    console.log(req.session.userId);
-
     db.createProfile(
         req.session.userId,
         req.body.user_age,
@@ -156,11 +139,8 @@ app.post("/petition", ensureSignedIn, ensurePetitionNotSigned, (req, res) => {
 });
 
 app.get("/thank-you", ensureSignedIn, ensurePetitionSigned, (req, res) => {
-    console.log("thank you : ", req.session.userId);
     Promise.all([db.countSigners(), db.getSignature(req.session.userId)]).then(
         ([count, userSignature]) => {
-            console.log(count, userSignature);
-
             const number_of_signers = count.rows[0].count;
             const user_signature = userSignature.rows[0].user_signature;
             res.render("thank-you", {
@@ -203,13 +183,9 @@ app.get(
 app.get("/logout", ensureSignedIn, (req, res) => {
     req.session = null;
     res.redirect("/register");
-    //
-    //else
-    //res.redirect("/petition");
 });
 
 app.get("/profile/edit", ensureSignedIn, (req, res) => {
-    console.log(req.session.userId);
     db.getUserData(req.session.userId).then(({ rows: [row] }) => {
         const {
             first_name,
@@ -233,24 +209,54 @@ app.get("/profile/edit", ensureSignedIn, (req, res) => {
 });
 
 app.post("/profile/edit", ensureSignedIn, (req, res) => {
-    db.updateUserData(
-        req.session.userId,
-        req.body.first_name,
-        req.body.last_name,
-        req.body.user_email
-    ).then(() => {
-        db.upsertUserProfile(
+    //validate all data before updating tables
+    let userUpdatePromise;
+    let password;
+    if (req.body.user_password) {
+        userUpdatePromise = bcrypt
+            .hash(req.body.user_password)
+            .then((hashed_password) => {
+                return db.updateUserDataWithPassword(
+                    req.session.userId,
+                    req.body.first_name,
+                    req.body.last_name,
+                    req.body.user_email,
+                    hashed_password
+                ); //.then((result) => {
+                //     return result;
+                // });
+            });
+    } else {
+        userUpdatePromise = db.updateUserDataWithoutPassword(
             req.session.userId,
-            req.body.user_age,
-            req.body.user_city,
-            req.body.user_homepage
+            req.body.first_name,
+            req.body.last_name,
+            req.body.user_email
         );
-        return res.redirect("/profile/edit");
-    });
+    }
+
+    userUpdatePromise
+        .then(() => {
+            let age = req.body.user_age || null;
+            return db
+                .upsertUserProfile(
+                    req.session.userId,
+                    age,
+                    req.body.user_city,
+                    req.body.user_homepage
+                )
+                .then((result) => {
+                    res.redirect("/profile/edit");
+                });
+            //;
+        })
+        .catch((error) =>
+            console.log("error deleting user updating profile", error)
+        );
 });
 
 app.get(
-    "/profile/edit/signature",
+    "/profile/signature/edit",
     ensureSignedIn,
     ensurePetitionSigned,
     (req, res) => {
@@ -261,9 +267,29 @@ app.get(
                 // user_name,
                 user_signature,
                 // error_status,
-                // edit_signature,
             });
         });
+    }
+);
+
+app.post(
+    "/profile/signature/edit",
+    ensureSignedIn,
+    ensurePetitionSigned,
+    (req, res) => {
+        if (req.body.delete_signature === "true") {
+            db.deleteUserSignature(req.session.userId).then(() => {
+                req.session.signed = false;
+                res.redirect("/petition");
+            });
+        } else if (req.body.user_signature) {
+            db.deleteUserSignature(req.session.userId).then(() => {
+                db.createSignature(
+                    req.session.userId,
+                    req.body.user_signature
+                ).then(() => res.redirect("/profile/signature/edit"));
+            });
+        }
     }
 );
 

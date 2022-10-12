@@ -1,4 +1,5 @@
 <div id="body">
+    <a href="/logout">logout</a>
     <div class="hello-headers">
         <h1>hello there {{user_name}}, thank you for signing my petition!</h1>
         <p>this is you current signature:</p>
@@ -10,7 +11,7 @@
     </div>
     <div class="form-div">
         <form method="post">
-            Sign here:
+            Sign here to change your signature:
             <input
                 type="text"
                 name="user_signature"
@@ -18,12 +19,18 @@
                 id="user_signature"
             />
             <canvas id="canv" width="400px" height="100px"></canvas>
-            <button type="submit" id="submit_btn">submit</button>
+            <button type="submit" id="submit_btn">Change signature</button>
+
         </form>
-        <a href="{{edit_signature}}">
-            <button>
-                Change Signature
+        <a href="/profile/signature/edit"><button id="submit_btn">Clear canvas</button></a>
+        <p>if you would like to withdraw your signature from this petition
+            please click the button bellow:</p>
+        <form action="" method="post">
+            <input type="text" name="delete_signature" value="true" hidden />
+            <button type="submit" class="delete-btn">
+                Delete Signature
             </button>
-        </a>
+        </form>
+
     </div>
 </div>

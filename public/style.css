@@ -77,3 +77,9 @@ img.cover:hover {
     border-bottom: 2px dotted black;
     margin-bottom: 50px;
 }
+
+.delete-btn {
+    background-color: red;
+    color: aliceblue;
+    margin: 5px;
+}
