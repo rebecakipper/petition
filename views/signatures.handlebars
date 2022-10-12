@@ -5,14 +5,20 @@
         {{#rows}}
             <div class="signer">
                 <h3>
-                    <a href="{{user_homepage}}">{{first_name}} {{last_name}}</a>
+                    {{#if user_homepage}}
+                        <a href="{{user_homepage}}">{{first_name}}
+                            {{last_name}}</a>
+                    {{else}}
+                        {{first_name}}
+                        {{last_name}}
+                    {{/if}}
                     {{user_age}}
-                    <a href="/signatures/{{user_city}}">{{user_city}}</a>
+                    {{#if user_city}}
+                        <a href="/signatures/{{user_city}}">{{user_city}}</a>
+                    {{/if}}
                 </h3>
             </div>
         {{/rows}}
-    </div>
-    <div class="form-div">
-
+        <a href="/thank-you">back to profile</a>
     </div>
 </div>

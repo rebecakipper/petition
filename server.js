@@ -34,23 +34,13 @@ app.use(logger);
 //////////////////////////////////////////ROUTES////////////////////////////////////////////////////////////
 
 app.get("/", (req, res) => {
-    //if user not loged in(cookie)
-    //       redirect to /register
     res.redirect("/register");
-    //
-    //else
-    //res.redirect("/petition");
 });
 
 app.get("/register", ensureSignedOut, (req, res) => {
-    //if user not loged in(cookie)
-    //      render /register
     res.render("register", {
         title: "Register",
     });
-    //
-    //else
-    //res.redirect("/petition");
 });
 
 app.post("/register", ensureSignedOut, (req, res) => {
@@ -60,59 +50,64 @@ app.post("/register", ensureSignedOut, (req, res) => {
             req.body.last_name,
             req.body.user_email,
             hashed_password
-        ).then((id) => {
-            if (!id) {
-                console.error("Error in insert:", err);
-                res.end("somethiung went wrong while creating user");
-            } else {
-                req.session.userId = id;
-                res.redirect("/profile");
-            }
-        });
-    });
-});
-
-app.get("/login", ensureSignedOut, (req, res) => {
-    //if user not loged in(cookie)
-    //      render /register
-    res.render("login", {
-        title: "Login",
-    });
-    //
-    //else
-    //res.redirect("/petition");
-});
-
-app.post("/login", ensureSignedOut, (req, res) => {
-    db.getUserByEmail(req.body.user_email).then(([hashed_password, id]) => {
-        const uId = id;
-        bcrypt
-            .authenticate(req.body.user_password, hashed_password)
-            .then((result) => {
-                if (result === true) {
-                    req.session.userId = uId;
-                    res.redirect("/profile");
+        )
+            .then((id) => {
+                if (!id) {
+                    console.error("Error in insert:", err);
+                    res.end("somethiung went wrong while creating user");
                 } else {
-                    res.render("login", {
-                        title: "Login",
-                        error_status:
-                            "please try again, something is not correct",
-                    });
+                    req.session.userId = id;
+                    res.redirect("/profile");
                 }
+            })
+            .catch((error) => {
+                console.log("error registering user", error);
+                res.render("register", {
+                    title: "Register",
+                    error_status: "please try again, something is not correct",
+                });
             });
     });
 });
 
+app.get("/login", ensureSignedOut, (req, res) => {
+    res.render("login", {
+        title: "Login",
+    });
+});
+
+app.post("/login", ensureSignedOut, (req, res) => {
+    db.getUserByEmail(req.body.user_email)
+        .then(([hashed_password, id]) => {
+            const uId = id;
+            bcrypt
+                .authenticate(req.body.user_password, hashed_password)
+                .then((result) => {
+                    if (result === true) {
+                        req.session.userId = uId;
+                        res.redirect("/profile");
+                    } else {
+                        res.render("login", {
+                            title: "Login",
+                            error_status:
+                                "please try again, something is not correct",
+                        });
+                    }
+                });
+        })
+        .catch((error) => {
+            console.log("error updating user data", error);
+            res.render("login", {
+                title: "Login",
+                error_status: "please try again, something is not correct",
+            });
+        });
+});
+
 app.get("/profile", ensureSignedIn, (req, res) => {
-    //if user not loged in(cookie)
-    //      render /register
     res.render("profile", {
         title: "Profile",
     });
-
-    //
-    //else
-    //res.redirect("/petition");
 });
 
 app.post("/profile", ensureSignedIn, (req, res) => {
@@ -157,8 +152,9 @@ app.get("/thank-you", ensureSignedIn, ensurePetitionSigned, (req, res) => {
 
 app.get("/signatures", ensureSignedIn, ensurePetitionSigned, (req, res) => {
     db.getAllSigners().then((rows) => {
+        console.log(rows);
         res.render("signatures", {
-            title: "all signers",
+            title: "All signers",
             rows,
         });
     });

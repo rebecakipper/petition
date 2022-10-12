@@ -10,7 +10,7 @@ const db = spicedPg(DATABASE_URL);
 
 module.exports.getAllSigners = function () {
     const sql =
-        "SELECT user_homepage, first_name, last_name, user_age, user_city FROM signatures JOIN profiles ON signatures.user_id = profiles.user_id JOIN users ON users.id = profiles.user_id;";
+        "SELECT user_homepage, first_name, last_name, user_age, user_city FROM signatures JOIN users ON signatures.user_id = users.id LEFT JOIN profiles ON users.id = profiles.user_id;";
     return db
         .query(sql)
         .then((result) => {
